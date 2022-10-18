@@ -44,7 +44,7 @@ type Config struct {
 	PolicyAUD       string
 	ForwardHeader   string
 	ForwardHost     string
-	HttpReadTimeout int    `default:"30"`
+	HttpReadTimeout int    `default:"30" envconfig:"http_read_timeout"`
 	ListenAddr      string `envconfig:"ADDR"`
 }
 
@@ -147,7 +147,7 @@ func main() {
 	}), verifier, &cfg))
 
 	server := &http.Server{
-		Addr:              ":" + cfg.ListenAddr,
+		Addr:              cfg.ListenAddr,
 		ReadHeaderTimeout: time.Duration(cfg.HttpReadTimeout) * time.Second,
 	}
 

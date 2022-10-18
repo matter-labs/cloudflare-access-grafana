@@ -44,7 +44,7 @@ type Config struct {
 	PolicyAUD       string
 	ForwardHeader   string
 	ForwardHost     string
-	HttpReadTimeout int    `default:"30" envconfig:"http_read_timeout"`
+	HttpReadTimeout string `default:"30s" envconfig:"http_read_timeout"`
 	ListenAddr      string `envconfig:"ADDR"`
 }
 
@@ -146,9 +146,14 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	}), verifier, &cfg))
 
+	duration, err := time.ParseDuration(cfg.HttpReadTimeout)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	server := &http.Server{
 		Addr:              cfg.ListenAddr,
-		ReadHeaderTimeout: time.Duration(cfg.HttpReadTimeout) * time.Second,
+		ReadHeaderTimeout: duration,
 	}
 
 	log.Printf("Listening on %s", cfg.ListenAddr)

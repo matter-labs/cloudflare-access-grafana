@@ -146,14 +146,14 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	}), verifier, &cfg))
 
-	duration, err := time.ParseDuration(cfg.HttpReadTimeout)
+	httpReadTimeoutDuration, err := time.ParseDuration(cfg.HttpReadTimeout)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	server := &http.Server{
 		Addr:              cfg.ListenAddr,
-		ReadHeaderTimeout: duration,
+		ReadHeaderTimeout: httpReadTimeoutDuration,
 	}
 
 	log.Printf("Listening on %s", cfg.ListenAddr)

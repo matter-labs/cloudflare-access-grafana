@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc"
 	"github.com/kelseyhightower/envconfig"
@@ -39,11 +40,12 @@ type CloudflareClaim struct {
 
 // Config is the general configuration (read from environment variables)
 type Config struct {
-	AuthDomain    string
-	PolicyAUD     string
-	ForwardHeader string
-	ForwardHost   string
-	ListenAddr    string `envconfig:"ADDR"`
+	AuthDomain      string
+	PolicyAUD       string
+	ForwardHeader   string
+	ForwardHost     string
+	HttpReadTimeout string `default:"30s" envconfig:"http_read_timeout"`
+	ListenAddr      string `envconfig:"ADDR"`
 }
 
 // Dummy struct for k8s health checks
@@ -144,8 +146,18 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	}), verifier, &cfg))
 
+	httpReadTimeoutDuration, err := time.ParseDuration(cfg.HttpReadTimeout)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	server := &http.Server{
+		Addr:              cfg.ListenAddr,
+		ReadHeaderTimeout: httpReadTimeoutDuration,
+	}
+
 	log.Printf("Listening on %s", cfg.ListenAddr)
-	if err := http.ListenAndServe(cfg.ListenAddr, nil); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Unable to start server on [%s], error: %s", cfg.ListenAddr, err.Error())
 	}
 }

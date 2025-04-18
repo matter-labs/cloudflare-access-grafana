@@ -126,6 +126,15 @@ func main() {
 		if len(strings.TrimSpace(cfg.ForwardHost)) > 0 {
 			req.URL.Host = cfg.ForwardHost
 		}
+
+		// Workaround for CF adding index.html to /api/dashboards/db/ path
+		// If the path is specifically /api/dashboards/db/index.html, remove the suffix
+		specificPath := "/api/dashboards/db/index.html"
+		if req.URL.Path == specificPath {
+			originalPath := req.URL.Path
+			req.URL.Path = strings.TrimSuffix(req.URL.Path, "/index.html")
+			log.Printf("Rewriting path: %s -> %s", originalPath, req.URL.Path)
+		}
 	}
 
 	proxy := &httputil.ReverseProxy{Director: director}
